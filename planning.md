@@ -1,122 +1,171 @@
 # Project 1 Planning: The Unofficial Guide
 
-> Write this document before you write any pipeline code.
-> Your spec and architecture diagram are what you'll use to direct AI tools (Claude, Copilot, etc.) to generate your implementation — the more specific they are, the more useful the generated code will be.
-> Update the Retrieval Approach and Chunking Strategy sections if you change your approach during implementation.
-> Update this file before starting any stretch features.
-
----
-
 ## Domain
 
-<!-- What domain did you choose? Why is this knowledge valuable and hard to find through official channels? -->
+I chose the domain of apartment resident experiences and reviews, using data collected from ApartmentRatings.com. This domain contains firsthand accounts from current and former residents about apartment communities, including topics such as maintenance quality, safety, noise levels, management responsiveness, amenities, parking, rent increases, pest issues, and overall satisfaction.
+
+This knowledge is valuable because official apartment websites and leasing offices typically highlight only positive features and marketing information, while real resident experiences are scattered across thousands of individual reviews. Prospective renters often struggle to find reliable information about recurring issues such as maintenance delays, safety concerns, hidden fees, noise problems, or management quality without manually reading hundreds of reviews. A retrieval-augmented system can make this collective resident knowledge searchable and accessible through natural language questions.
 
 ---
 
 ## Documents
 
-<!-- List your specific sources: URLs, subreddit names, forum threads, or file descriptions.
-     Aim for at least 10 sources that together cover different subtopics or perspectives within your domain. -->
-
-| # | Source | Description | URL or location |
+| # | Source | Description | File location |
 |---|--------|-------------|-----------------|
-| 1 | | | |
-| 2 | | | |
-| 3 | | | |
-| 4 | | | |
-| 5 | | | |
-| 6 | | | |
-| 7 | | | |
-| 8 | | | |
-| 9 | | | |
-| 10 | | | |
+| 1 | Avana Tempe Apartments | Reviews of Avana Tempe Apartments from www.apartmentratings.com | ./data/avana/reviews.json |
+| 2 | IMT Desert Palm Village | Reviews of IMT Desert Palm Village from www.apartmentratings.com | ./data/dpv/reviews.json |
+| 3 | Elliot's Crossing | Reviews of Elliot's Crossing from www.apartmentratings.com | ./data/elliot/reviews.json |
+| 4 | Finisterra On Grove | Reviews of Finisterra On Grove from www.apartmentratings.com | ./data/finisterra/reviews.json |
+| 5 | Galleria Palms | Reviews of Galleria Palms from www.apartmentratings.com | ./data/galleria/reviews.json |
+| 6 | MAA Fountainhead | Reviews of MAA Fountainhead from www.apartmentratings.com | ./data/maa/reviews.json |
+| 7 | Onnix | Reviews of Onnix from www.apartmentratings.com | ./data/onnix/reviews.json |
+| 8 | Sentry Tempe | Reviews of Sentry Tempe from www.apartmentratings.com | ./data/sentry/reviews.json |
+| 9 | Scottsdale Gateway Apartments | Reviews of Scottsdale Gateway Apartments from www.apartmentratings.com | ./data/sga/reviews.json |
+| 10 | Studio 710 | Reviews of Studio 710 from www.apartmentratings.com | ./data/studio/reviews.json |
 
 ---
 
 ## Chunking Strategy
 
-<!-- How will you split documents into chunks?
-     State your chunk size (in tokens or characters), overlap size, and explain why those
-     numbers fit the structure of your documents.
-     A review-heavy corpus warrants different chunking than a long FAQ. -->
 
-**Chunk size:**
+- Each review becomes exactly one chunk.
+- Combine review_title, review_text, and response_text into a single chunk.
+- Do not split reviews by token count.
+- Do not merge multiple reviews together.
+- Keep apartment_id, apartment_name, review_id, review_date, and all rating fields as metadata.
+- Generate chunk text in this format:
 
-**Overlap:**
+Apartment: {apartment_name}
+
+Review Title: {review_title}
+
+Review:
+{review_text}
+
+Management Response:
+{response_text}
+
+Output should be a list of chunks where each chunk contains:
+{
+  "text": "...",
+  "metadata": {...}
+}
+
+
+**Chunk size:**500
+
+**Overlap:**50
 
 **Reasoning:**
+
+Most chunking strategies exist because documents are too large (articles, PDFs, manuals, books). In this dataset, each review is already a focused piece of information discussing a specific experience:
+
+maintenance problems
+noise complaints
+safety concerns
+management responsiveness
+amenities
+location
+rent increases
+
+If we split a review into smaller chunks, we'll often lose context.
 
 ---
 
 ## Retrieval Approach
 
-<!-- Which embedding model are you using (e.g., all-MiniLM-L6-v2 via sentence-transformers)?
-     How many chunks will you retrieve per query (top-k)?
-     If you were deploying this for real users and cost wasn't a constraint, what tradeoffs
-     would you weigh in choosing a different embedding model — context length, multilingual
-     support, accuracy on domain-specific text, latency? -->
+**Embedding model:** all-MiniLM-L6-v2 (sentence-transformers)
 
-**Embedding model:**
-
-**Top-k:**
+**Top-k:** 5
 
 **Production tradeoff reflection:**
+If I were deploying this for real users and cost were not a constraint, I would prioritize a stronger embedding model with better domain understanding over all-MiniLM-L6-v2. I would weigh context length, retrieval accuracy on long apartment reviews, and robustness to informal language, since resident reviews often include slang, noise, typos, and mixed sentiment. I would also consider multilingual support, latency, and indexing cost, but for this domain the biggest gain would likely come from a higher-quality model that captures maintenance, safety, noise, and management-related meaning more accurately than a lightweight baseline.
 
 ---
 
 ## Evaluation Plan
 
-<!-- List your 5 test questions with their expected correct answers.
-     Questions should be specific enough that you can judge whether the system's response
-     is right or wrong. "What are good dining halls?" is too vague.
-     "What do students say about wait times at [dining hall name] during lunch?" is testable. -->
-
 | # | Question | Expected answer |
 |---|----------|-----------------|
-| 1 | | |
-| 2 | | |
-| 3 | | |
-| 4 | | |
-| 5 | | |
+| 1 | What do residents say about maintenance response times at Avana Tempe Apartments? | Residents say maintenance is often quick and responsive in some reviews, but other reviews mention delays, unresolved issues, and repeated follow-ups. |
+| 2 | What do residents say about noise levels at Avana Tempe Apartments? | Opinions are mixed, but several reviews describe the community as quiet or peaceful, while others mention freeway noise, loud neighbors, or parties. |
+| 3 | What do residents say about safety at Avana Tempe Apartments? | Some residents feel safe and comfortable, but other reviews mention concerns about crime, unsafe neighbors, police activity, or feeling unsafe at night. |
+| 4 | How do residents describe the office staff at Avana Tempe Apartments? | Some reviews praise the staff as friendly, professional, and helpful, while others criticize them for poor communication, rudeness, or not handling issues well. |
+| 5 | What are the most common complaints about living at Avana Tempe Apartments? | Common complaints include maintenance problems, pest issues, hot water or AC problems, poor communication, noise, and safety concerns. |
 
 ---
 
 ## Anticipated Challenges
 
-<!-- What could go wrong? Name at least two specific risks with reasoning.
-     Consider: noisy or inconsistent documents, missing source attribution, off-topic
-     retrieval, chunks that split key information across boundaries. -->
+1. Reviews contain noisy, subjective, and sometimes contradictory information. Different residents may report very different experiences about the same apartment community (e.g., maintenance, safety, or noise), making it difficult for the retrieval system to provide a single definitive answer.
 
-1.
-
-2.
-
+2. Retrieval may return reviews that mention similar keywords but are not relevant to the user's question. For example, a query about maintenance quality could retrieve reviews that only briefly mention maintenance while primarily discussing safety or management, reducing answer quality.
 ---
 
 ## Architecture
 
-<!-- Draw a diagram of your pipeline showing the five stages:
-     Document Ingestion → Chunking → Embedding + Vector Store → Retrieval → Generation
-     Label each stage with the tool or library you're using.
-     You can use ASCII art, a Mermaid diagram, or embed a sketch as an image.
-     You'll use this diagram as context when prompting AI tools to implement each stage. -->
++----------------------+
+| Document Ingestion   |
+|----------------------|
+| Apartment Reviews    |
+| JSON Files           |
+| Python (json)        |
++----------+-----------+
+           |
+           v
++----------------------+
+| Chunking             |
+|----------------------|
+| One Review =         |
+| One Chunk            |
+| Custom Python Logic  |
++----------+-----------+
+           |
+           v
++----------------------+
+| Embedding            |
+|----------------------|
+| all-MiniLM-L6-v2     |
+| sentence-transformers|
++----------+-----------+
+           |
+           v
++----------------------+
+| Vector Store         |
+|----------------------|
+| ChromaDB             |
+| Store Embeddings     |
++----------+-----------+
+           |
+           v
++----------------------+
+| Retrieval            |
+|----------------------|
+| Similarity Search    |
+| Top-k = 5            |
++----------+-----------+
+           |
+           v
++----------------------+
+| Generation           |
+|----------------------|
+| LLM + Retrieved      |
+| Reviews              |
+| Final Answer         |
++----------------------+
 
 ---
 
 ## AI Tool Plan
 
-<!-- For each part of the pipeline below, describe:
-     - Which AI tool you plan to use (Claude, Copilot, ChatGPT, etc.)
-     - What you'll give it as input (which sections of this planning.md, which requirements)
-     - What you expect it to produce
-     - How you'll verify the output matches your spec
+### Milestone 3 — Ingestion and Chunking
 
-     "I'll use AI to help me code" is not a plan.
-     "I'll give Claude my Chunking Strategy section and ask it to implement chunk_text()
-     with my specified chunk size and overlap" is a plan. -->
+I will use Claude Code to implement the ingestion and chunking pipeline. I will provide the apartment review schema, the chunking strategy, and the requirement that each review should become exactly one chunk with the review title, review text, and management response combined. I expect Claude to generate code that reads the cleaned JSON review files, performs any final preprocessing, and produces chunk objects containing text and metadata. I will verify the output by checking that every review generates exactly one chunk, no reviews are dropped, and metadata such as apartment name, review ID, review date, and ratings are preserved.
 
-**Milestone 3 — Ingestion and chunking:**
+### Milestone 4 — Embedding and Retrieval
 
-**Milestone 4 — Embedding and retrieval:**
+I will use Claude Code to implement the embedding and retrieval pipeline. I will provide the Retrieval Approach section, specifying the `all-MiniLM-L6-v2` embedding model, Chroma DB as the vector store, and a retrieval value of Top-k = 5. I expect Claude to generate code that creates embeddings for each review chunk, stores them in a persistent Chroma collection, and retrieves the most relevant chunks for a user query using semantic similarity search. I will verify the implementation by running the evaluation questions and confirming that the retrieved reviews contain information relevant to the expected answers.
 
-**Milestone 5 — Generation and interface:**
+### Milestone 5 — Generation and Interface
+
+I will use Claude Code to implement the answer generation pipeline and user interface. I will provide the pipeline diagram, evaluation questions, and the requirement that generated answers must be based only on retrieved review chunks. I expect Claude to produce the retrieval-augmented generation logic, prompt template, and a simple command-line or web interface that accepts user questions and returns grounded answers. I will verify the system by comparing generated responses against the expected answers in the evaluation plan and ensuring that answers are supported by retrieved reviews rather than unsupported assumptions.

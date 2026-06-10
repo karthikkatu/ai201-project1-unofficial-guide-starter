@@ -11,6 +11,7 @@ env/
 
 # Jupyter
 .ipynb_checkpoints/
+.idea/
 
 # ChromaDB local storage
 chroma_db/
@@ -18,3 +19,4 @@ chroma/
 
 # macOS
 .DS_Store
+
