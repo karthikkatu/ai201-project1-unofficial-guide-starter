@@ -30,6 +30,7 @@ This knowledge is valuable because official apartment websites and leasing offic
 
 - Each review becomes exactly one chunk.
 - Combine review_title, review_text, and response_text into a single chunk.
+- If it is very long, split it into chunks of about 500 tokens with 100 overlap.
 - Do not split reviews by token count.
 - Do not merge multiple reviews together.
 - Keep apartment_id, apartment_name, review_id, review_date, and all rating fields as metadata.
