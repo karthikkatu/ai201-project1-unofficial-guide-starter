@@ -19,9 +19,9 @@ sys.path.insert(0, str(Path(__file__).parent))
 from retrieval import retrieve
 
 QUERIES = [
-    "What do residents say about maintenance response times?",
-    "What do residents say about safety?",
-    "What are the most common complaints about living here?",
+    "What do residents say about maintenance response times in MAA Fountainhead?",
+    "What do residents say about safety in Scottsdale Gateway Apartments?",
+    "What are the most common complaints about living here in GOvindha Apartments?",
 ]
 
 TOP_K = 5
